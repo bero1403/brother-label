@@ -185,6 +185,7 @@ class BrotherDeviceManager(ElementManager):
             # PT 180 dpi Series
             BrotherDevicePT_180('PT-E550W',     ( 31, 14172), number_bytes_per_row=16),
             BrotherDevicePT_180('PT-P750W',     ( 31, 14172), number_bytes_per_row=16),
+            BrotherDevicePT_180('PT-D600',      ( 31, 14172), number_bytes_per_row=16),
 
             # PT 360 dpi Series
             BrotherDevicePT_360('PT-P900W',     ( 57, 28346), number_bytes_per_row=70),
