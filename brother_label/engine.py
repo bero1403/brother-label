@@ -128,3 +128,45 @@ class BrotherLabel(object):
             logger.info("Printing was successful. Waiting for the next job.")
 
         return status
+
+    def get_status(self, target=None, backend=None):
+        """
+        Query the printer for its current status without sending a print
+        job. Useful for detecting which label/tape is currently loaded,
+        or checking for error conditions (cover open, no media, etc.)
+        ahead of time.
+
+        :return: dict as returned by reader.interpret_response() (keys:
+            'status_type', 'phase_type', 'media_type', 'media_width',
+            'media_length', 'errors'), plus an additional 'label' key
+            containing the matching Label object from self.device (or
+            None if no device is set, or no label with a matching
+            tape_size width is found).
+        """
+        backend = backend_factory(backend)['backend_class'] if backend else self.backend
+
+        if not backend:
+            raise LookupError('No backend available')
+
+        printer = backend(target or self.target)
+        try:
+            printer.write(b'\x1b\x40')     # ESC @   : initialize
+            printer.write(b'\x1b\x69\x53') # ESC i S : status request
+
+            data = printer.read()
+            if not data:
+                time.sleep(0.05)
+                data = printer.read()
+
+            result = interpret_response(data)
+        finally:
+            printer.dispose()
+
+        result['label'] = None
+        if self.device:
+            for label in self.device.labels:
+                if label.tape_size[0] == result['media_width']:
+                    result['label'] = label
+                    break
+
+        return result
